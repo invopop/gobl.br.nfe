@@ -3,7 +3,7 @@ module github.com/invopop/gobl.br.nfe
 go 1.25.0
 
 require (
-	github.com/invopop/gobl v0.501.1-0.20260624161438-5c15dc7c1692
+	github.com/invopop/gobl v0.501.1-0.20260702093618-40e1027d5b3f
 	github.com/stretchr/testify v1.11.1
 )
 
