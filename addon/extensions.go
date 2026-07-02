@@ -1359,8 +1359,8 @@ var extensions = []*cbc.Definition{
 			i18n.PT: "Código de Finalidade",
 		},
 		Desc: i18n.String{
-			i18n.EN: here.Doc(`
-				Code that identifies the purpose of the fiscal document (CEFAZ field ~finNFe~,
+				i18n.EN: here.Doc(`
+				Code that identifies the purpose of the fiscal document (SEFAZ field ~finNFe~,
 				B25). Standard invoices are set to ~1~ (normal) via a tax scenario.
 			`),
 		},
@@ -1436,7 +1436,7 @@ var extensions = []*cbc.Definition{
 		Desc: i18n.String{
 			i18n.EN: here.Doc(`
 				Code that identifies the type of operation, indicating whether it is inbound
-				or outbound (CEFAZ field ~tpNF~, B11). Standard invoices are set to ~1~
+				or outbound (SEFAZ field ~tpNF~, B11). Standard invoices are set to ~1~
 				(outbound) via a tax scenario.
 			`),
 		},
@@ -1475,7 +1475,7 @@ var extensions = []*cbc.Definition{
 		},
 		Desc: i18n.String{
 			i18n.EN: here.Doc(`
-				Code that identifies the type of credit note (CEFAZ field ~tpNFCredito~,
+				Code that identifies the type of credit note (SEFAZ field ~tpNFCredito~,
 				B25.2) according to the RTM (applies to IBS/CBS only).
 			`),
 		},
@@ -1535,7 +1535,7 @@ var extensions = []*cbc.Definition{
 		},
 		Desc: i18n.String{
 			i18n.EN: here.Doc(`
-				Code that identifies the type of debit note (CEFAZ field ~tpNFDebito~, B25.1)
+				Code that identifies the type of debit note (SEFAZ field ~tpNFDebito~, B25.1)
 				according to the RTM (applies to IBS/CBS only).
 			`),
 		},
