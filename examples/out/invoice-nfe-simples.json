@@ -4,7 +4,7 @@
 		"uuid": "8a51fd30-2a27-11ee-be56-0242ac120002",
 		"dig": {
 			"alg": "sha256",
-			"val": "362358d8f43047f2b069224ed3406753cda3dd49856da53960fd9dd316dbaf02"
+			"val": "7dadfc651a18c2d01c526c8b8d18b9ed34702b879a5b1c0e40c953bea9155252"
 		}
 	},
 	"doc": {
@@ -13,67 +13,51 @@
 		"$addons": [
 			"br-nfe-v4"
 		],
-		"uuid": "0193305c-a7be-730d-b552-2093f0df3a1c",
-		"type": "credit-note",
+		"uuid": "01937e2b-6c3d-7e4f-9a50-2b3c4d5e6f70",
+		"type": "standard",
 		"series": "1",
-		"code": "55",
-		"issue_date": "2024-11-25",
+		"code": "2048",
+		"issue_date": "2024-11-20",
 		"currency": "BRL",
-		"preceding": [
-			{
-				"uuid": "01937e2b-6c3d-7e4f-9a50-2b3c4d5e6f71",
-				"type": "standard",
-				"issue_date": "2024-11-20",
-				"series": "1",
-				"code": "2049",
-				"stamps": [
-					{
-						"prv": "sefaz-key",
-						"val": "31241118069577000115550010000020491000000017"
-					}
-				]
-			}
-		],
 		"tax": {
 			"ext": {
-				"br-nfe-credit-note-type": "04",
 				"br-nfe-model": "55",
 				"br-nfe-operation-type": "1",
 				"br-nfe-presence": "1",
-				"br-nfe-purpose": "5"
+				"br-nfe-purpose": "1"
 			}
 		},
 		"supplier": {
-			"name": "Indústria de Móveis Horizonte S.A.",
+			"name": "Marcenaria Arte \u0026 Design ME",
 			"tax_id": {
 				"country": "BR",
-				"code": "18069577000115"
+				"code": "12345678000195"
 			},
 			"identities": [
 				{
 					"key": "br-nfe-state-reg",
-					"code": "0623458901"
+					"code": "0623458900"
 				}
 			],
 			"addresses": [
 				{
-					"num": "1200",
-					"street": "Avenida das Indústrias",
-					"locality": "Distrito Industrial",
+					"num": "85",
+					"street": "Rua dos Artesãos",
+					"locality": "Savassi",
 					"region": "Minas Gerais",
 					"state": "MG",
-					"code": "30140-072",
+					"code": "30140-071",
 					"country": "BR"
 				}
 			],
 			"emails": [
 				{
-					"addr": "vendas@horizonte.example.com"
+					"addr": "contato@artedesign.com.br"
 				}
 			],
 			"ext": {
 				"br-ibge-municipality": "3106200",
-				"br-nfe-regime": "3"
+				"br-nfe-regime": "1"
 			}
 		},
 		"customer": {
@@ -106,45 +90,45 @@
 		"lines": [
 			{
 				"i": 1,
-				"quantity": "1",
+				"quantity": "5",
 				"item": {
-					"ref": "CAD-ESC",
-					"name": "Cadeira de Escritório Ergonômica",
+					"ref": "MES-CARV",
+					"name": "Mesa de Jantar em Madeira Maciça",
 					"identities": [
 						{
 							"key": "ncm",
-							"code": "94013010"
+							"code": "94036000"
 						}
 					],
-					"price": "450.00",
+					"price": "900.00",
 					"unit": "piece"
 				},
-				"sum": "450.00",
+				"sum": "4500.00",
 				"taxes": [
 					{
 						"cat": "ICMS",
-						"percent": "12%",
+						"percent": "2.56%",
 						"ext": {
-							"br-nfe-icms-cst": "00",
+							"br-nfe-icms-csosn": "101",
 							"br-nfe-icms-origin": "0"
 						}
 					},
 					{
 						"cat": "PIS",
-						"percent": "1.65%",
+						"percent": "0%",
 						"ext": {
-							"br-nfe-pis-cst": "01"
+							"br-nfe-pis-cst": "49"
 						}
 					},
 					{
 						"cat": "COFINS",
-						"percent": "7.6%",
+						"percent": "0%",
 						"ext": {
-							"br-nfe-cofins-cst": "01"
+							"br-nfe-cofins-cst": "49"
 						}
 					}
 				],
-				"total": "450.00",
+				"total": "4500.00",
 				"ext": {
 					"br-nfe-cfop": "6102"
 				}
@@ -159,8 +143,8 @@
 			}
 		},
 		"totals": {
-			"sum": "450.00",
-			"total": "450.00",
+			"sum": "4500.00",
+			"total": "4500.00",
 			"taxes": {
 				"categories": [
 					{
@@ -169,15 +153,15 @@
 						"rates": [
 							{
 								"ext": {
-									"br-nfe-icms-cst": "00",
+									"br-nfe-icms-csosn": "101",
 									"br-nfe-icms-origin": "0"
 								},
-								"base": "450.00",
-								"percent": "12%",
-								"amount": "54.00"
+								"base": "4500.00",
+								"percent": "2.56%",
+								"amount": "115.20"
 							}
 						],
-						"amount": "54.00"
+						"amount": "115.20"
 					},
 					{
 						"code": "PIS",
@@ -185,14 +169,14 @@
 						"rates": [
 							{
 								"ext": {
-									"br-nfe-pis-cst": "01"
+									"br-nfe-pis-cst": "49"
 								},
-								"base": "450.00",
-								"percent": "1.65%",
-								"amount": "7.43"
+								"base": "4500.00",
+								"percent": "0%",
+								"amount": "0.00"
 							}
 						],
-						"amount": "7.43"
+						"amount": "0.00"
 					},
 					{
 						"code": "COFINS",
@@ -200,26 +184,26 @@
 						"rates": [
 							{
 								"ext": {
-									"br-nfe-cofins-cst": "01"
+									"br-nfe-cofins-cst": "49"
 								},
-								"base": "450.00",
-								"percent": "7.6%",
-								"amount": "34.20"
+								"base": "4500.00",
+								"percent": "0%",
+								"amount": "0.00"
 							}
 						],
-						"amount": "34.20"
+						"amount": "0.00"
 					}
 				],
 				"sum": "0.00"
 			},
 			"tax": "0.00",
-			"total_with_tax": "450.00",
-			"payable": "450.00"
+			"total_with_tax": "4500.00",
+			"payable": "4500.00"
 		},
 		"notes": [
 			{
 				"key": "reason",
-				"text": "Redução de valor referente à nota fiscal de venda"
+				"text": "Venda de mercadoria"
 			}
 		]
 	}

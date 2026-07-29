@@ -3,65 +3,47 @@
   "$addons": [
     "br-nfe-v4"
   ],
-  "uuid": "0193305c-a7be-730d-b552-2093f0df3a1c",
-  "type": "credit-note",
-  "series": "1",
-  "code": "55",
-  "issue_date": "2024-11-25",
-  "currency": "BRL",
+  "uuid": "01937e2b-6c3d-7e4f-9a50-2b3c4d5e6f70",
   "tax": {
     "ext": {
-      "br-nfe-presence": "1",
-      "br-nfe-purpose": "5",
-      "br-nfe-operation-type": "1",
-      "br-nfe-credit-note-type": "04"
+      "br-nfe-presence": "1"
     }
   },
-  "preceding": [
-    {
-      "uuid": "01937e2b-6c3d-7e4f-9a50-2b3c4d5e6f71",
-      "type": "standard",
-      "series": "1",
-      "code": "2049",
-      "issue_date": "2024-11-20",
-      "stamps": [
-        {
-          "prv": "sefaz-key",
-          "val": "31241118069577000115550010000020491000000017"
-        }
-      ]
-    }
-  ],
+  "series": "1",
+  "code": "2048",
+  "issue_date": "2024-11-20",
+  "currency": "BRL",
   "supplier": {
-    "name": "Indústria de Móveis Horizonte S.A.",
+    "name": "Marcenaria Arte & Design ME",
     "tax_id": {
       "country": "BR",
-      "code": "18069577000115"
+      "code": "12345678000195"
     },
     "identities": [
       {
         "key": "br-nfe-state-reg",
-        "code": "0623458901"
+        "code": "0623458900"
       }
     ],
     "addresses": [
       {
-        "num": "1200",
-        "street": "Avenida das Indústrias",
-        "locality": "Distrito Industrial",
+        "num": "85",
+        "street": "Rua dos Artesãos",
+        "locality": "Savassi",
         "region": "Minas Gerais",
         "state": "MG",
-        "code": "30140-072",
+        "code": "30140-071",
         "country": "BR"
       }
     ],
     "emails": [
       {
-        "addr": "vendas@horizonte.example.com"
+        "addr": "contato@artedesign.com.br"
       }
     ],
     "ext": {
-      "br-ibge-municipality": "3106200"
+      "br-ibge-municipality": "3106200",
+      "br-nfe-regime": "1"
     }
   },
   "customer": {
@@ -94,31 +76,40 @@
   "lines": [
     {
       "i": 1,
-      "quantity": "1",
+      "quantity": "5",
       "item": {
-        "ref": "CAD-ESC",
-        "name": "Cadeira de Escritório Ergonômica",
+        "ref": "MES-CARV",
+        "name": "Mesa de Jantar em Madeira Maciça",
         "identities": [
           {
             "key": "ncm",
-            "code": "94013010"
+            "code": "94036000"
           }
         ],
-        "price": "450.00",
+        "price": "900.00",
         "unit": "piece"
       },
       "taxes": [
         {
           "cat": "ICMS",
-          "percent": "12%"
+          "percent": "2.56%",
+          "ext": {
+            "br-nfe-icms-csosn": "101"
+          }
         },
         {
           "cat": "PIS",
-          "percent": "1.65%"
+          "percent": "0%",
+          "ext": {
+            "br-nfe-pis-cst": "49"
+          }
         },
         {
           "cat": "COFINS",
-          "percent": "7.6%"
+          "percent": "0%",
+          "ext": {
+            "br-nfe-cofins-cst": "49"
+          }
         }
       ],
       "ext": {
@@ -134,7 +125,7 @@
   "notes": [
     {
       "key": "reason",
-      "text": "Redução de valor referente à nota fiscal de venda"
+      "text": "Venda de mercadoria"
     }
   ]
 }

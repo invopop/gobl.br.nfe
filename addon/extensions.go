@@ -1359,7 +1359,7 @@ var extensions = []*cbc.Definition{
 			i18n.PT: "Código de Finalidade",
 		},
 		Desc: i18n.String{
-				i18n.EN: here.Doc(`
+			i18n.EN: here.Doc(`
 				Code that identifies the purpose of the fiscal document (SEFAZ field ~finNFe~,
 				B25). Standard invoices are set to ~1~ (normal) via a tax scenario.
 			`),

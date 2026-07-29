@@ -3,35 +3,16 @@
   "$addons": [
     "br-nfe-v4"
   ],
-  "uuid": "0193305c-a7be-730d-b552-2093f0df3a1c",
-  "type": "credit-note",
-  "series": "1",
-  "code": "55",
-  "issue_date": "2024-11-25",
-  "currency": "BRL",
+  "uuid": "01937e2b-6c3d-7e4f-9a50-2b3c4d5e6f71",
   "tax": {
     "ext": {
-      "br-nfe-presence": "1",
-      "br-nfe-purpose": "5",
-      "br-nfe-operation-type": "1",
-      "br-nfe-credit-note-type": "04"
+      "br-nfe-presence": "1"
     }
   },
-  "preceding": [
-    {
-      "uuid": "01937e2b-6c3d-7e4f-9a50-2b3c4d5e6f71",
-      "type": "standard",
-      "series": "1",
-      "code": "2049",
-      "issue_date": "2024-11-20",
-      "stamps": [
-        {
-          "prv": "sefaz-key",
-          "val": "31241118069577000115550010000020491000000017"
-        }
-      ]
-    }
-  ],
+  "series": "1",
+  "code": "2049",
+  "issue_date": "2024-11-20",
+  "currency": "BRL",
   "supplier": {
     "name": "Indústria de Móveis Horizonte S.A.",
     "tax_id": {
@@ -94,7 +75,7 @@
   "lines": [
     {
       "i": 1,
-      "quantity": "1",
+      "quantity": "10",
       "item": {
         "ref": "CAD-ESC",
         "name": "Cadeira de Escritório Ergonômica",
@@ -134,7 +115,7 @@
   "notes": [
     {
       "key": "reason",
-      "text": "Redução de valor referente à nota fiscal de venda"
+      "text": "Venda de mercadoria"
     }
   ]
 }

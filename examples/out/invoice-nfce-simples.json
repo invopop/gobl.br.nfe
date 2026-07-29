@@ -4,7 +4,7 @@
 		"uuid": "8a51fd30-2a27-11ee-be56-0242ac120002",
 		"dig": {
 			"alg": "sha256",
-			"val": "44ddb954d890dfb53b68841443cb136edc329653396fec245091998fb6c25666"
+			"val": "c1b65fb9c8ab949f937747b520dca797398d0768b065384c9311484e34486746"
 		}
 	},
 	"doc": {
@@ -16,10 +16,10 @@
 		"$tags": [
 			"simplified"
 		],
-		"uuid": "0193305c-a7be-730d-b552-2093f0df2df9",
+		"uuid": "0193305c-a7be-730d-b552-2093f0df2df7",
 		"type": "standard",
 		"series": "123",
-		"code": "3",
+		"code": "1",
 		"issue_date": "2024-11-15",
 		"currency": "BRL",
 		"tax": {
@@ -31,10 +31,10 @@
 			}
 		},
 		"supplier": {
-			"name": "Supermercado Bom Preço Ltda.",
+			"name": "Drogaria Vida Saudável Ltda.",
 			"tax_id": {
 				"country": "BR",
-				"code": "18069577000115"
+				"code": "55263640000186"
 			},
 			"identities": [
 				{
@@ -44,59 +44,60 @@
 			],
 			"addresses": [
 				{
-					"num": "500",
-					"street": "Avenida Atlântica",
-					"locality": "Copacabana",
+					"num": "200",
+					"street": "Rua Primeiro de Março",
+					"street_extra": "Torre A",
+					"locality": "Centro",
 					"region": "Rio de Janeiro",
 					"state": "RJ",
-					"code": "22010-000",
+					"code": "20010-000",
 					"country": "BR"
 				}
 			],
 			"emails": [
 				{
-					"addr": "fiscal@bompreco.example.com"
+					"addr": "saudemais@example.com"
 				}
 			],
 			"ext": {
 				"br-ibge-municipality": "3304557",
-				"br-nfe-regime": "3"
+				"br-nfe-regime": "1"
 			}
 		},
 		"lines": [
 			{
 				"i": 1,
-				"quantity": "3",
+				"quantity": "2",
 				"item": {
-					"name": "Suco de Laranja 1L",
-					"price": "8.00"
+					"name": "Caixa de Máscaras Cirúrgicas",
+					"price": "10.00"
 				},
-				"sum": "24.00",
+				"sum": "20.00",
 				"taxes": [
 					{
 						"cat": "ICMS",
-						"percent": "18%",
+						"percent": "0%",
 						"ext": {
-							"br-nfe-icms-cst": "00",
+							"br-nfe-icms-csosn": "102",
 							"br-nfe-icms-origin": "0"
 						}
 					},
 					{
 						"cat": "PIS",
-						"percent": "1.65%",
+						"percent": "0%",
 						"ext": {
-							"br-nfe-pis-cst": "01"
+							"br-nfe-pis-cst": "49"
 						}
 					},
 					{
 						"cat": "COFINS",
-						"percent": "7.6%",
+						"percent": "0%",
 						"ext": {
-							"br-nfe-cofins-cst": "01"
+							"br-nfe-cofins-cst": "49"
 						}
 					}
 				],
-				"total": "24.00",
+				"total": "20.00",
 				"ext": {
 					"br-nfe-cfop": "5102"
 				}
@@ -111,8 +112,8 @@
 			}
 		},
 		"totals": {
-			"sum": "24.00",
-			"total": "24.00",
+			"sum": "20.00",
+			"total": "20.00",
 			"taxes": {
 				"categories": [
 					{
@@ -121,15 +122,15 @@
 						"rates": [
 							{
 								"ext": {
-									"br-nfe-icms-cst": "00",
+									"br-nfe-icms-csosn": "102",
 									"br-nfe-icms-origin": "0"
 								},
-								"base": "24.00",
-								"percent": "18%",
-								"amount": "4.32"
+								"base": "20.00",
+								"percent": "0%",
+								"amount": "0.00"
 							}
 						],
-						"amount": "4.32"
+						"amount": "0.00"
 					},
 					{
 						"code": "PIS",
@@ -137,14 +138,14 @@
 						"rates": [
 							{
 								"ext": {
-									"br-nfe-pis-cst": "01"
+									"br-nfe-pis-cst": "49"
 								},
-								"base": "24.00",
-								"percent": "1.65%",
-								"amount": "0.40"
+								"base": "20.00",
+								"percent": "0%",
+								"amount": "0.00"
 							}
 						],
-						"amount": "0.40"
+						"amount": "0.00"
 					},
 					{
 						"code": "COFINS",
@@ -152,21 +153,21 @@
 						"rates": [
 							{
 								"ext": {
-									"br-nfe-cofins-cst": "01"
+									"br-nfe-cofins-cst": "49"
 								},
-								"base": "24.00",
-								"percent": "7.6%",
-								"amount": "1.82"
+								"base": "20.00",
+								"percent": "0%",
+								"amount": "0.00"
 							}
 						],
-						"amount": "1.82"
+						"amount": "0.00"
 					}
 				],
 				"sum": "0.00"
 			},
 			"tax": "0.00",
-			"total_with_tax": "24.00",
-			"payable": "24.00"
+			"total_with_tax": "20.00",
+			"payable": "20.00"
 		},
 		"notes": [
 			{

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/invopop/gobl/bill"
+	"github.com/invopop/gobl/cbc"
 	"github.com/invopop/gobl/currency"
 	"github.com/invopop/gobl/l10n"
 	"github.com/invopop/gobl/num"
@@ -17,6 +18,15 @@ import (
 // Validation patterns
 const (
 	seriesPattern = `^(?:0|[1-9]{1}[0-9]{0,2})$` // extracted from the NFe XSD to validate the series
+)
+
+var (
+	// Supplier regimes that issue under Simples Nacional rules (CSOSN codes).
+	regimeSimplesCodes = []cbc.Code{"1", "4"}
+	// Supplier regimes that issue under normal ICMS rules (CST codes).
+	regimeNormalCodes = []cbc.Code{"2", "3"}
+	// Fuel monophase CSTs permitted for Simples Nacional issuers
+	icmsFuelCSTCodes = []cbc.Code{"02", "15", "53", "61"}
 )
 
 // normalizeInvoice applies NF-e invoice-level defaults.
@@ -213,14 +223,42 @@ func billInvoiceRules() *rules.Set {
 				),
 			),
 		),
-		// Lines: NF-e requires CFOP on each line
+		// Lines
+		rules.Field("lines",
+			rules.Each(
+				rules.Field("ext",
+					rules.Assert("35", fmt.Sprintf("invoice lines require '%s' extension", ExtKeyCFOP),
+						tax.ExtensionsRequire(ExtKeyCFOP),
+					),
+				),
+			),
+		),
+		// Rules specific to suppliers under normal regime
 		rules.When(
-			is.Func("invoice is NFe", invoiceIsNFe),
-			rules.Field("lines",
-				rules.Each(
+			is.Func("supplier under normal regime", supplierInNormalRegime),
+			eachLineTax(
+				rules.When(
+					is.Func("ICMS category", taxCategoryIs(br.TaxCategoryICMS)),
 					rules.Field("ext",
-						rules.Assert("35", fmt.Sprintf("NF-e invoice lines require '%s' extension", ExtKeyCFOP),
-							tax.ExtensionsRequire(ExtKeyCFOP),
+						rules.Assert("42", fmt.Sprintf("only Simples Nacional issuers can use '%s'; others must use '%s'", ExtKeyICMSCSOSN, ExtKeyICMSCST),
+							tax.ExtensionsExclude(ExtKeyICMSCSOSN),
+						),
+					),
+				),
+			),
+		),
+		// Rules specific to suppliers under Simples Nacional
+		rules.When(
+			is.Func("supplier under Simples Nacional", supplierInSimplesNacional),
+			eachLineTax(
+				rules.When(
+					is.Func("ICMS category", taxCategoryIs(br.TaxCategoryICMS)),
+					rules.Field("ext",
+						rules.Assert("43", fmt.Sprintf("Simples Nacional issuers (regime 1 or 4) must use '%s'; '%s' is only allowed for fuel codes 02, 15, 53 and 61", ExtKeyICMSCSOSN, ExtKeyICMSCST),
+							is.AnyOf(
+								tax.ExtensionsExclude(ExtKeyICMSCST),
+								tax.ExtensionsHasCodes(ExtKeyICMSCST, icmsFuelCSTCodes...),
+							),
 						),
 					),
 				),
@@ -233,6 +271,22 @@ func billInvoiceRules() *rules.Set {
 func invoiceIsNFe(val any) bool {
 	inv, ok := val.(*bill.Invoice)
 	return ok && inv != nil && inv.Tax != nil && modelIsNFe(inv.Tax.Ext)
+}
+
+// supplierInSimplesNacional checks if the invoice's supplier is under the Simples
+// Nacional (1) or MEI (4) tax regimes.
+func supplierInSimplesNacional(val any) bool {
+	inv, ok := val.(*bill.Invoice)
+	return ok && inv != nil && inv.Supplier != nil &&
+		inv.Supplier.Ext.Get(ExtKeyRegime).In(regimeSimplesCodes...)
+}
+
+// supplierInNormalRegime checks if the invoice's supplier is under a regime following the
+// normal ICMS rules (2 or 3).
+func supplierInNormalRegime(val any) bool {
+	inv, ok := val.(*bill.Invoice)
+	return ok && inv != nil && inv.Supplier != nil &&
+		inv.Supplier.Ext.Get(ExtKeyRegime).In(regimeNormalCodes...)
 }
 
 // modelIsNFe checks if the tax extensions indicate NF-e model.
@@ -323,4 +377,14 @@ func hasForeignCountryIdentity(val any) bool {
 		}
 	}
 	return false
+}
+
+func eachLineTax(defs ...rules.Def) rules.Def {
+	return rules.Field("lines",
+		rules.Each(
+			rules.Field("taxes",
+				rules.Each(defs...),
+			),
+		),
+	)
 }
