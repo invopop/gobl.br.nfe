@@ -56,6 +56,9 @@ func payInstructionsRules() *rules.Set {
 			rules.Assert("01", fmt.Sprintf("payment instructions require '%s' extension", ExtKeyPaymentMeans),
 				tax.ExtensionsRequire(ExtKeyPaymentMeans),
 			),
+			rules.Assert("02", fmt.Sprintf("'%s' extension, when set, must be a valid code", ExtKeyPaymentMeans),
+				tax.ExtensionHasValidCode(ExtKeyPaymentMeans),
+			),
 		),
 	)
 }
@@ -65,6 +68,9 @@ func payAdvanceRules() *rules.Set {
 		rules.Field("ext",
 			rules.Assert("01", fmt.Sprintf("payment advance requires '%s' extension", ExtKeyPaymentMeans),
 				tax.ExtensionsRequire(ExtKeyPaymentMeans),
+			),
+			rules.Assert("02", fmt.Sprintf("'%s' extension, when set, must be a valid code", ExtKeyPaymentMeans),
+				tax.ExtensionHasValidCode(ExtKeyPaymentMeans),
 			),
 		),
 	)
