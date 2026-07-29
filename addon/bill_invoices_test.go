@@ -232,7 +232,7 @@ func TestSupplierValidation(t *testing.T) {
 		inv.Supplier.Addresses = []*org.Address{nil}
 		inv.Supplier.Ext = tax.ExtensionsOf(cbc.CodeMap{
 			"br-ibge-municipality": "3304557",
-			addon.ExtKeyRegime:       "3",
+			addon.ExtKeyRegime:     "3",
 		})
 		err = rules.Validate(inv)
 		assert.ErrorContains(t, err, "supplier address must not be empty")
@@ -276,7 +276,7 @@ func TestSupplierValidation(t *testing.T) {
 
 		inv.Supplier.Ext = tax.ExtensionsOf(cbc.CodeMap{
 			"br-ibge-municipality": "3304557",
-			addon.ExtKeyRegime:       "3",
+			addon.ExtKeyRegime:     "3",
 		})
 		err = rules.Validate(inv)
 		assert.NoError(t, err)
@@ -474,7 +474,7 @@ func TestCustomerValidation(t *testing.T) {
 		inv := validCalculatedInvoice(t)
 		inv.Lines[0].Ext = tax.Extensions{}
 		err := rules.Validate(inv)
-		assert.ErrorContains(t, err, fmt.Sprintf("NF-e invoice lines require '%s' extension", addon.ExtKeyCFOP))
+		assert.ErrorContains(t, err, fmt.Sprintf("invoice lines require '%s' extension", addon.ExtKeyCFOP))
 
 		inv.Lines[0].Ext = tax.ExtensionsOf(cbc.CodeMap{
 			addon.ExtKeyCFOP: "5102",
@@ -483,13 +483,19 @@ func TestCustomerValidation(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	t.Run("NFC-e lines do not require CFOP extension", func(t *testing.T) {
+	t.Run("NFC-e lines require CFOP extension", func(t *testing.T) {
 		inv := validCalculatedInvoice(t)
 		inv.Tax.Ext = inv.Tax.Ext.Set(addon.ExtKeyModel, addon.ModelNFCe)
 		inv.Tax.Ext = inv.Tax.Ext.Set(addon.ExtKeyPresence, addon.PresenceInPerson)
 		inv.Customer = nil
 		inv.Lines[0].Ext = tax.Extensions{}
 		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, fmt.Sprintf("invoice lines require '%s' extension", addon.ExtKeyCFOP))
+
+		inv.Lines[0].Ext = tax.ExtensionsOf(cbc.CodeMap{
+			addon.ExtKeyCFOP: "5102",
+		})
+		err = rules.Validate(inv)
 		assert.NoError(t, err)
 	})
 }
@@ -540,6 +546,100 @@ func TestInvoiceCurrencyValidation(t *testing.T) {
 		require.NoError(t, inv.Calculate())
 		err := rules.Validate(inv)
 		assert.NoError(t, err)
+	})
+}
+
+func TestICMSRegimeCodeValidation(t *testing.T) {
+	// Sets a line's ICMS combo extensions and percent in place.
+	setICMS := func(inv *bill.Invoice, ext cbc.CodeMap, percent *num.Percentage) {
+		icms := inv.Lines[0].Taxes.Get(br.TaxCategoryICMS)
+		icms.Ext = tax.ExtensionsOf(ext)
+		icms.Percent = percent
+	}
+
+	t.Run("Simples supplier cannot use a non-fuel CST", func(t *testing.T) {
+		inv := validCalculatedInvoice(t)
+		inv.Supplier.Ext = inv.Supplier.Ext.Set(addon.ExtKeyRegime, "1")
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, "Simples Nacional issuers (regime 1 or 4) must use 'br-nfe-icms-csosn'; 'br-nfe-icms-cst' is only allowed for fuel codes 02, 15, 53 and 61")
+	})
+
+	t.Run("MEI supplier cannot use a non-fuel CST", func(t *testing.T) {
+		inv := validCalculatedInvoice(t)
+		inv.Supplier.Ext = inv.Supplier.Ext.Set(addon.ExtKeyRegime, "4")
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, "Simples Nacional issuers (regime 1 or 4) must use 'br-nfe-icms-csosn'")
+	})
+
+	t.Run("Simples supplier may use a fuel CST", func(t *testing.T) {
+		inv := validCalculatedInvoice(t)
+		inv.Supplier.Ext = inv.Supplier.Ext.Set(addon.ExtKeyRegime, "1")
+		setICMS(inv, cbc.CodeMap{
+			addon.ExtKeyICMSCST:    "02",
+			addon.ExtKeyICMSOrigin: "0",
+		}, num.NewPercentage(18, 2))
+		err := rules.Validate(inv)
+		assert.NoError(t, err)
+	})
+
+	t.Run("Simples supplier with CSOSN is valid", func(t *testing.T) {
+		inv := validCalculatedInvoice(t)
+		inv.Supplier.Ext = inv.Supplier.Ext.Set(addon.ExtKeyRegime, "1")
+		setICMS(inv, cbc.CodeMap{
+			addon.ExtKeyICMSCSOSN:  "102",
+			addon.ExtKeyICMSOrigin: "0",
+		}, &num.PercentageZero)
+		err := rules.Validate(inv)
+		assert.NoError(t, err)
+	})
+
+	t.Run("normal regime supplier cannot use CSOSN", func(t *testing.T) {
+		inv := validCalculatedInvoice(t)
+		setICMS(inv, cbc.CodeMap{
+			addon.ExtKeyICMSCSOSN:  "102",
+			addon.ExtKeyICMSOrigin: "0",
+		}, &num.PercentageZero)
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, "only Simples Nacional issuers can use 'br-nfe-icms-csosn'; others must use 'br-nfe-icms-cst'")
+	})
+
+	t.Run("regime 2 supplier cannot use CSOSN", func(t *testing.T) {
+		inv := validCalculatedInvoice(t)
+		inv.Supplier.Ext = inv.Supplier.Ext.Set(addon.ExtKeyRegime, "2")
+		setICMS(inv, cbc.CodeMap{
+			addon.ExtKeyICMSCSOSN:  "102",
+			addon.ExtKeyICMSOrigin: "0",
+		}, &num.PercentageZero)
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, "only Simples Nacional issuers can use 'br-nfe-icms-csosn'; others must use 'br-nfe-icms-cst'")
+	})
+
+	t.Run("ignores combos in discounts and charges", func(t *testing.T) {
+		// The converter never maps document-level discount or charge taxes,
+		// so their situation codes are not regime-checked.
+		inv := validCalculatedInvoice(t)
+		inv.Supplier.Ext = inv.Supplier.Ext.Set(addon.ExtKeyRegime, "1")
+		setICMS(inv, cbc.CodeMap{
+			addon.ExtKeyICMSCSOSN:  "102",
+			addon.ExtKeyICMSOrigin: "0",
+		}, &num.PercentageZero)
+		inv.Discounts = []*bill.Discount{
+			{
+				Reason: "Promotional discount",
+				Amount: num.MakeAmount(100, 2),
+				Taxes: tax.Set{
+					{
+						Category: br.TaxCategoryICMS,
+						Percent:  num.NewPercentage(18, 2),
+						Ext: tax.ExtensionsOf(cbc.CodeMap{
+							addon.ExtKeyICMSCST:    "00",
+							addon.ExtKeyICMSOrigin: "0",
+						}),
+					},
+				},
+			},
+		}
+		assert.NoError(t, rules.Validate(inv))
 	})
 }
 

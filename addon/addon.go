@@ -42,6 +42,8 @@ func init() {
 		billInvoiceRules(),
 		billLineRules(),
 		taxComboRules(),
+		identityRules(),
+		orgPartyRules(),
 		payInstructionsRules(),
 		payAdvanceRules(),
 	)
