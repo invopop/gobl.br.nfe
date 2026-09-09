@@ -15,6 +15,7 @@ const (
 	ExtKeyFiscalIncentive = "br-nfe-fiscal-incentive"
 	ExtKeyRegime          = "br-nfe-regime"
 	ExtKeySpecialRegime   = "br-nfe-special-regime"
+	ExtKeyStateRegInd     = "br-nfe-state-reg-ind"
 	ExtKeyICMSCST         = "br-nfe-icms-cst"
 	ExtKeyICMSCSOSN       = "br-nfe-icms-csosn"
 	ExtKeyICMSOrigin      = "br-nfe-icms-origin"
@@ -59,6 +60,13 @@ const (
 	OperationOutbound cbc.Code = "1"
 )
 
+// State Registration Indicator Codes
+const (
+	StateRegIndTaxpayer    cbc.Code = "1"
+	StateRegIndExempt      cbc.Code = "2"
+	StateRegIndNonTaxpayer cbc.Code = "9"
+)
+
 var extensions = []*cbc.Definition{
 	{
 		Key: ExtKeyModel,
@@ -78,9 +86,10 @@ var extensions = []*cbc.Definition{
 		},
 		Desc: i18n.String{
 			i18n.EN: here.Doc(`
-				Code used to identify the fiscal document model. It will be
-				determined automatically by GOBL during normalization according to
-				the scenario definitions.
+				Code used to identify the fiscal document model. It is determined
+				automatically by GOBL during normalization from the invoice tags:
+				~65~ (NFC-e) for invoices tagged as ~simplified~ and ~55~ (NF-e)
+				otherwise.
 			`),
 		},
 		Values: []*cbc.Definition{
@@ -509,6 +518,74 @@ var extensions = []*cbc.Definition{
 			i18n.EN: here.Doc(`
 				Indicates a special tax regime that a party is subject to.
 			`),
+		},
+		Sources: []*cbc.Source{
+			{
+				Title: i18n.String{
+					i18n.EN: "Taxpayer Guidance Manual v7.0 - Annex I – Layout and Validation Rules for NF-e and NFC-e",
+					i18n.PT: "Manual de Orientação ao Contribuinte v7.0 - Anexo I – Leiaute e Regras de Validação da NF-e e da NFC-e",
+				},
+				URL:         "https://www.nfe.fazenda.gov.br/portal/exibirArquivo.aspx?conteudo=J%20I%20v4eN00E=",
+				ContentType: "application/pdf",
+			},
+		},
+	},
+	{
+		Key: ExtKeyStateRegInd,
+		Name: i18n.String{
+			i18n.EN: "Recipient State Registration Indicator",
+			i18n.PT: "Indicador da Inscrição Estadual do Destinatário",
+		},
+		Desc: i18n.String{
+			i18n.EN: here.Doc(`
+				Indicates the ICMS taxpayer status of the invoice's customer with
+				regard to its state registration (IE) (SEFAZ field ~indIEDest~,
+				E16a). It is required on the customer, when present. If not
+				provided, GOBL sets it during normalization: ~9~ (non-taxpayer) for
+				NFC-e documents, and otherwise ~1~ (taxpayer) when the customer has
+				a ~br-nfe-state-reg~ identity or ~9~ when it does not.
+			`),
+		},
+		Values: []*cbc.Definition{
+			{
+				Code: StateRegIndTaxpayer,
+				Name: i18n.String{
+					i18n.EN: "ICMS taxpayer",
+					i18n.PT: "Contribuinte ICMS",
+				},
+				Desc: i18n.String{
+					i18n.EN: here.Doc(`
+						Customer registered as an ICMS taxpayer. Its state
+						registration (IE) must be provided.
+					`),
+				},
+			},
+			{
+				Code: StateRegIndExempt,
+				Name: i18n.String{
+					i18n.EN: "ICMS taxpayer exempt from registration",
+					i18n.PT: "Contribuinte isento de Inscrição no cadastro de Contribuintes",
+				},
+				Desc: i18n.String{
+					i18n.EN: here.Doc(`
+						Customer that is an ICMS taxpayer but is exempt from the
+						state registration (IE), which must not be provided.
+					`),
+				},
+			},
+			{
+				Code: StateRegIndNonTaxpayer,
+				Name: i18n.String{
+					i18n.EN: "Non-taxpayer",
+					i18n.PT: "Não Contribuinte",
+				},
+				Desc: i18n.String{
+					i18n.EN: here.Doc(`
+						Customer that is not an ICMS taxpayer, which may or may not
+						have a state registration (IE).
+					`),
+				},
+			},
 		},
 		Sources: []*cbc.Source{
 			{

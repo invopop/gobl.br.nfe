@@ -31,10 +31,45 @@ var (
 
 // normalizeInvoice applies NF-e invoice-level defaults.
 func normalizeInvoice(inv *bill.Invoice) {
-	if inv == nil || inv.Supplier == nil {
+	if inv == nil {
 		return
 	}
-	inv.Supplier.Ext = inv.Supplier.Ext.SetIfEmpty(ExtKeyRegime, "3") // Normal regime
+
+	// The model is set first so that the rest of the normalization can rely on it.
+	normalizeInvoiceModel(inv)
+
+	if inv.Supplier != nil {
+		inv.Supplier.Ext = inv.Supplier.Ext.SetIfEmpty(ExtKeyRegime, "3") // Normal regime
+	}
+	if inv.Customer != nil {
+		inv.Customer.Ext = inv.Customer.Ext.SetIfEmpty(ExtKeyStateRegInd, defaultStateRegInd(inv))
+	}
+}
+
+// normalizeInvoiceModel sets the fiscal document model from the invoice tags: NFC-e (65)
+// for simplified invoices, NF-e (55) otherwise.
+//
+// This would normally be defined as a tax scenario, but GOBL applies scenarios after
+// normalization and other normalizers depend on the model. It is therefore implemented as
+// a normalizer that runs before the rest of the invoice normalization.
+func normalizeInvoiceModel(inv *bill.Invoice) {
+	model := ModelNFe
+	if inv.HasTags(tax.TagSimplified) {
+		model = ModelNFCe
+	}
+	if inv.Tax == nil {
+		inv.Tax = new(bill.Tax)
+	}
+	inv.Tax.Ext = inv.Tax.Ext.Set(ExtKeyModel, model)
+}
+
+// defaultStateRegInd determines the default state registration indicator of the invoice's
+// customer.
+func defaultStateRegInd(inv *bill.Invoice) cbc.Code {
+	if invoiceIsNFe(inv) && partyHasStateReg(inv.Customer) {
+		return StateRegIndTaxpayer
+	}
+	return StateRegIndNonTaxpayer
 }
 
 func billInvoiceRules() *rules.Set {
@@ -149,6 +184,36 @@ func billInvoiceRules() *rules.Set {
 						rules.Assert("22", fmt.Sprintf("invoice customer requires '%s' extension when addresses are present", br.ExtKeyMunicipality),
 							tax.ExtensionsRequire(br.ExtKeyMunicipality),
 						),
+					),
+				),
+			),
+		),
+		// Customer: state registration indicator (MOC E16a)
+		rules.Field("customer",
+			rules.Field("ext",
+				rules.Assert("50", fmt.Sprintf("invoice customer requires '%s' extension", ExtKeyStateRegInd),
+					tax.ExtensionsRequire(ExtKeyStateRegInd),
+				),
+			),
+			rules.When(
+				is.Func("ICMS taxpayer", partyStateRegIndIs(StateRegIndTaxpayer)),
+				rules.Assert("51", fmt.Sprintf("invoice customer requires '%s' identity when '%s' is '%s'", IdentityKeyStateReg, ExtKeyStateRegInd, StateRegIndTaxpayer),
+					is.Func("has state registration", partyHasStateReg),
+				),
+			),
+			rules.When(
+				is.Func("ICMS taxpayer exempt", partyStateRegIndIs(StateRegIndExempt)),
+				rules.Assert("52", fmt.Sprintf("invoice customer must not have '%s' identity when '%s' is '%s'", IdentityKeyStateReg, ExtKeyStateRegInd, StateRegIndExempt),
+					is.Func("has no state registration", partyHasNoStateReg),
+				),
+			),
+		),
+		rules.When(
+			is.Func("invoice is NFCe", invoiceIsNFCe),
+			rules.Field("customer",
+				rules.Field("ext",
+					rules.Assert("53", fmt.Sprintf("NFC-e invoices require '%s' for '%s'", StateRegIndNonTaxpayer, ExtKeyStateRegInd),
+						tax.ExtensionsHasCodes(ExtKeyStateRegInd, StateRegIndNonTaxpayer),
 					),
 				),
 			),
@@ -289,6 +354,32 @@ func billInvoiceRules() *rules.Set {
 func invoiceIsNFe(val any) bool {
 	inv, ok := val.(*bill.Invoice)
 	return ok && inv != nil && inv.Tax != nil && modelIsNFe(inv.Tax.Ext)
+}
+
+// invoiceIsNFCe checks if the invoice's tax model is NFC-e.
+func invoiceIsNFCe(val any) bool {
+	inv, ok := val.(*bill.Invoice)
+	return ok && inv != nil && inv.Tax != nil && modelIsNFCe(inv.Tax.Ext)
+}
+
+// partyStateRegIndIs returns a tester that matches a party whose state registration
+// indicator extension has the given code.
+func partyStateRegIndIs(code cbc.Code) func(any) bool {
+	return func(val any) bool {
+		p, ok := val.(*org.Party)
+		return ok && p != nil && p.Ext.Get(ExtKeyStateRegInd) == code
+	}
+}
+
+// partyHasStateReg checks if the party has a state registration (IE) identity.
+func partyHasStateReg(val any) bool {
+	p, ok := val.(*org.Party)
+	return ok && p != nil && org.IdentityForKey(p.Identities, IdentityKeyStateReg) != nil
+}
+
+// partyHasNoStateReg checks if the party has no state registration (IE) identity.
+func partyHasNoStateReg(val any) bool {
+	return !partyHasStateReg(val)
 }
 
 // supplierInSimplesNacional checks if the invoice's supplier is under the Simples

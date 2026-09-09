@@ -8,6 +8,7 @@ import (
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/cbc"
 	"github.com/invopop/gobl/currency"
+	"github.com/invopop/gobl/norm"
 	"github.com/invopop/gobl/num"
 	"github.com/invopop/gobl/org"
 	"github.com/invopop/gobl/pay"
@@ -343,7 +344,8 @@ func TestCustomerValidation(t *testing.T) {
 				},
 			},
 			Ext: tax.ExtensionsOf(cbc.CodeMap{
-				"br-ibge-municipality": "3550308",
+				"br-ibge-municipality":  "3550308",
+				addon.ExtKeyStateRegInd: addon.StateRegIndNonTaxpayer,
 			}),
 		}
 		err = rules.Validate(inv)
@@ -364,7 +366,8 @@ func TestCustomerValidation(t *testing.T) {
 
 		inv.Customer.Addresses = []*org.Address{nil}
 		inv.Customer.Ext = tax.ExtensionsOf(cbc.CodeMap{
-			"br-ibge-municipality": "3550308",
+			"br-ibge-municipality":  "3550308",
+			addon.ExtKeyStateRegInd: addon.StateRegIndNonTaxpayer,
 		})
 		err = rules.Validate(inv)
 		assert.ErrorContains(t, err, "customer address must not be empty")
@@ -424,12 +427,15 @@ func TestCustomerValidation(t *testing.T) {
 
 	t.Run("validates customer municipality when addresses exist", func(t *testing.T) {
 		inv := validCalculatedInvoice(t)
-		inv.Customer.Ext = tax.Extensions{}
+		inv.Customer.Ext = tax.ExtensionsOf(cbc.CodeMap{
+			addon.ExtKeyStateRegInd: addon.StateRegIndNonTaxpayer,
+		})
 		err := rules.Validate(inv)
 		assert.ErrorContains(t, err, "requires 'br-ibge-municipality' extension when addresses are present")
 
 		inv.Customer.Ext = tax.ExtensionsOf(cbc.CodeMap{
-			"br-ibge-municipality": "3550308",
+			"br-ibge-municipality":  "3550308",
+			addon.ExtKeyStateRegInd: addon.StateRegIndNonTaxpayer,
 		})
 		err = rules.Validate(inv)
 		assert.NoError(t, err)
@@ -497,6 +503,182 @@ func TestCustomerValidation(t *testing.T) {
 		})
 		err = rules.Validate(inv)
 		assert.NoError(t, err)
+	})
+}
+
+func TestCustomerStateRegIndValidation(t *testing.T) {
+	stateReg := &org.Identity{
+		Key:  addon.IdentityKeyStateReg,
+		Code: "112233445566",
+	}
+
+	t.Run("requires the extension when a customer is present", func(t *testing.T) {
+		inv := validCalculatedInvoice(t)
+		inv.Customer.Ext = inv.Customer.Ext.Delete(addon.ExtKeyStateRegInd)
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, "invoice customer requires 'br-nfe-state-reg-ind' extension")
+
+		inv.Customer.Ext = inv.Customer.Ext.Set(addon.ExtKeyStateRegInd, addon.StateRegIndNonTaxpayer)
+		err = rules.Validate(inv)
+		assert.NoError(t, err)
+	})
+
+	t.Run("does not require the extension without a customer", func(t *testing.T) {
+		inv := validCalculatedInvoice(t)
+		inv.Tax.Ext = inv.Tax.Ext.Set(addon.ExtKeyModel, addon.ModelNFCe)
+		inv.Customer = nil
+		err := rules.Validate(inv)
+		assert.NoError(t, err)
+	})
+
+	t.Run("validates the extension code", func(t *testing.T) {
+		inv := validCalculatedInvoice(t)
+		inv.Customer.Ext = inv.Customer.Ext.Set(addon.ExtKeyStateRegInd, "3")
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, "'br-nfe-state-reg-ind' extension, when set, must be a valid code")
+	})
+
+	t.Run("taxpayer requires the state registration", func(t *testing.T) {
+		inv := validCalculatedInvoice(t)
+		inv.Customer.Identities = nil
+		inv.Customer.Ext = inv.Customer.Ext.Set(addon.ExtKeyStateRegInd, addon.StateRegIndTaxpayer)
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, "invoice customer requires 'br-nfe-state-reg' identity when 'br-nfe-state-reg-ind' is '1'")
+
+		inv.Customer.Identities = []*org.Identity{stateReg}
+		err = rules.Validate(inv)
+		assert.NoError(t, err)
+	})
+
+	t.Run("exempt taxpayer must not have a state registration", func(t *testing.T) {
+		inv := validCalculatedInvoice(t)
+		inv.Customer.Identities = []*org.Identity{stateReg}
+		inv.Customer.Ext = inv.Customer.Ext.Set(addon.ExtKeyStateRegInd, addon.StateRegIndExempt)
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, "invoice customer must not have 'br-nfe-state-reg' identity when 'br-nfe-state-reg-ind' is '2'")
+
+		inv.Customer.Identities = nil
+		err = rules.Validate(inv)
+		assert.NoError(t, err)
+	})
+
+	t.Run("non-taxpayer may or may not have a state registration", func(t *testing.T) {
+		inv := validCalculatedInvoice(t)
+		inv.Customer.Ext = inv.Customer.Ext.Set(addon.ExtKeyStateRegInd, addon.StateRegIndNonTaxpayer)
+		inv.Customer.Identities = nil
+		err := rules.Validate(inv)
+		assert.NoError(t, err)
+
+		inv.Customer.Identities = []*org.Identity{stateReg}
+		err = rules.Validate(inv)
+		assert.NoError(t, err)
+	})
+
+	t.Run("NFC-e customers must be non-taxpayers", func(t *testing.T) {
+		inv := validCalculatedInvoice(t)
+		inv.Tax.Ext = inv.Tax.Ext.Set(addon.ExtKeyModel, addon.ModelNFCe)
+		inv.Customer.Identities = []*org.Identity{stateReg}
+		inv.Customer.Ext = inv.Customer.Ext.Set(addon.ExtKeyStateRegInd, addon.StateRegIndTaxpayer)
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, "NFC-e invoices require '9' for 'br-nfe-state-reg-ind'")
+
+		inv.Customer.Ext = inv.Customer.Ext.Set(addon.ExtKeyStateRegInd, addon.StateRegIndExempt)
+		inv.Customer.Identities = nil
+		err = rules.Validate(inv)
+		assert.ErrorContains(t, err, "NFC-e invoices require '9' for 'br-nfe-state-reg-ind'")
+
+		// The state registration is irrelevant for non-taxpayers, also in NFC-e
+		inv.Customer.Ext = inv.Customer.Ext.Set(addon.ExtKeyStateRegInd, addon.StateRegIndNonTaxpayer)
+		inv.Customer.Identities = []*org.Identity{stateReg}
+		err = rules.Validate(inv)
+		assert.NoError(t, err)
+	})
+}
+
+func TestInvoiceModelNormalization(t *testing.T) {
+	t.Run("defaults to NF-e", func(t *testing.T) {
+		inv := &bill.Invoice{Addons: tax.WithAddons(addon.V4)}
+		norm.Normalize(inv, tax.AddonContext(addon.V4))
+		assert.Equal(t, addon.ModelNFe, inv.Tax.GetExt(addon.ExtKeyModel))
+	})
+
+	t.Run("sets NFC-e for simplified invoices", func(t *testing.T) {
+		inv := &bill.Invoice{Addons: tax.WithAddons(addon.V4)}
+		inv.SetTags(tax.TagSimplified)
+		norm.Normalize(inv, tax.AddonContext(addon.V4))
+		assert.Equal(t, addon.ModelNFCe, inv.Tax.GetExt(addon.ExtKeyModel))
+	})
+
+	t.Run("overrides an explicit model", func(t *testing.T) {
+		inv := &bill.Invoice{
+			Addons: tax.WithAddons(addon.V4),
+			Type:   bill.InvoiceTypeStandard,
+			Tax:    &bill.Tax{Ext: tax.ExtensionsOf(cbc.CodeMap{addon.ExtKeyModel: addon.ModelNFCe})},
+		}
+		norm.Normalize(inv, tax.AddonContext(addon.V4))
+		assert.Equal(t, addon.ModelNFe, inv.Tax.GetExt(addon.ExtKeyModel))
+	})
+
+	t.Run("sets the model before the customer defaults", func(t *testing.T) {
+		inv := &bill.Invoice{
+			Addons: tax.WithAddons(addon.V4),
+			Type:   bill.InvoiceTypeStandard,
+			Customer: &org.Party{
+				Identities: []*org.Identity{{Key: addon.IdentityKeyStateReg, Code: "112233445566"}},
+			},
+		}
+		inv.SetTags(tax.TagSimplified)
+		norm.Normalize(inv, tax.AddonContext(addon.V4))
+		assert.Equal(t, addon.ModelNFCe, inv.Tax.GetExt(addon.ExtKeyModel))
+		assert.Equal(t, addon.StateRegIndNonTaxpayer, inv.Customer.Ext.Get(addon.ExtKeyStateRegInd))
+	})
+}
+
+func TestCustomerStateRegIndNormalization(t *testing.T) {
+	stateReg := &org.Identity{
+		Key:  addon.IdentityKeyStateReg,
+		Code: "112233445566",
+	}
+
+	t.Run("defaults to taxpayer when the customer has a state registration", func(t *testing.T) {
+		inv := validInvoice()
+		inv.Customer.Identities = []*org.Identity{stateReg}
+		require.NoError(t, inv.Calculate())
+		assert.Equal(t, addon.StateRegIndTaxpayer, inv.Customer.Ext.Get(addon.ExtKeyStateRegInd))
+	})
+
+	t.Run("defaults to non-taxpayer when the customer has no state registration", func(t *testing.T) {
+		inv := validInvoice()
+		inv.Customer.Identities = nil
+		require.NoError(t, inv.Calculate())
+		assert.Equal(t, addon.StateRegIndNonTaxpayer, inv.Customer.Ext.Get(addon.ExtKeyStateRegInd))
+	})
+
+	t.Run("defaults to non-taxpayer for NFC-e regardless of the state registration", func(t *testing.T) {
+		inv := validInvoice()
+		inv.Tax = nil // model to be set during normalization
+		inv.SetTags(tax.TagSimplified)
+		inv.Customer.Identities = []*org.Identity{stateReg}
+		require.NoError(t, inv.Calculate())
+		assert.Equal(t, addon.ModelNFCe, inv.Tax.Ext.Get(addon.ExtKeyModel))
+		assert.Equal(t, addon.StateRegIndNonTaxpayer, inv.Customer.Ext.Get(addon.ExtKeyStateRegInd))
+	})
+
+	t.Run("does not override an existing value", func(t *testing.T) {
+		inv := validInvoice()
+		inv.Customer.Identities = nil
+		inv.Customer.Ext = inv.Customer.Ext.Set(addon.ExtKeyStateRegInd, addon.StateRegIndExempt)
+		require.NoError(t, inv.Calculate())
+		assert.Equal(t, addon.StateRegIndExempt, inv.Customer.Ext.Get(addon.ExtKeyStateRegInd))
+	})
+
+	t.Run("nil customer is a no-op", func(t *testing.T) {
+		inv := validInvoice()
+		inv.Customer = nil
+		assert.NotPanics(t, func() {
+			require.NoError(t, inv.Calculate())
+		})
+		assert.Nil(t, inv.Customer)
 	})
 }
 

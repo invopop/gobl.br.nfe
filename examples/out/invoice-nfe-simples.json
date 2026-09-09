@@ -4,7 +4,7 @@
 		"uuid": "8a51fd30-2a27-11ee-be56-0242ac120002",
 		"dig": {
 			"alg": "sha256",
-			"val": "7dadfc651a18c2d01c526c8b8d18b9ed34702b879a5b1c0e40c953bea9155252"
+			"val": "1a5398a533868205ad3562cde501ec5e2db35c258d83df1a55e59dbee86775f4"
 		}
 	},
 	"doc": {
@@ -84,7 +84,8 @@
 				}
 			],
 			"ext": {
-				"br-ibge-municipality": "3550308"
+				"br-ibge-municipality": "3550308",
+				"br-nfe-state-reg-ind": "1"
 			}
 		},
 		"lines": [
