@@ -20,6 +20,9 @@ func orgPartyRules() *rules.Set {
 			rules.Assert("03", fmt.Sprintf("'%s' extension, when set, must be a valid code", ExtKeySpecialRegime),
 				tax.ExtensionHasValidCode(ExtKeySpecialRegime),
 			),
+			rules.Assert("04", fmt.Sprintf("'%s' extension, when set, must be a valid code", ExtKeyStateRegInd),
+				tax.ExtensionHasValidCode(ExtKeyStateRegInd),
+			),
 		),
 	)
 }
